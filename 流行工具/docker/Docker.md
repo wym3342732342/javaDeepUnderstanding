@@ -480,6 +480,22 @@ mysql -uroot -p
 
 
 
+**my.cnf配置解决一些时间问题：/etc/mysql/my.cnf**
+
+```mysql
+sql-mode=STRICT_TRANS_TABLES,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION
+```
+
+
+
+**更新软件包安装vim:**
+
+```shell
+apt-get update
+
+apt-get install vim
+```
+
 
 
  ## 4.2 tomcat部署
@@ -694,3 +710,11 @@ docker start registry
 docker push 192.168.3.75:5000/jdk1.8
 ```
 
+
+
+
+
+> 补充：
+>
+> 1. 查看docker容器ip地址：`docker inspect 容器ID | grep IPAddress`
+> 2. docker容器重启命令：`docker restart 容器名`
