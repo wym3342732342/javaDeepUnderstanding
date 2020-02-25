@@ -542,6 +542,67 @@ docker pull redis
 docker run -di --name=myredis -p 6379:6379 redis
 ```
 
+
+
+## 4.5 Oracle部署
+
+(1) 创建容器
+
+```shell
+docker run -d -it --name myOracle -p 1521:1521 -p 5500:5500 -e DB_SID=orcl store/oracle/database-enterprise:12.2.0.1
+```
+
+(2) 进入镜像
+
+```shell
+docker exec -it oracle bash -c "source /home/oracle/.bashrc; sqlplus /nolog"
+```
+
+(3) 修改密码
+
+```shell
+alter user sys identified by 123456;
+```
+
+(4) 拷贝数据
+
+```shell
+docker cp oracle:/ORCL /home/docker/oracle/data
+```
+
+(5) 使用卷映射数据库文件：
+
+```shell
+docker run -d --name oracle \
+-p 1521:1521 \
+-e DB_SID=orcl \
+-v /home/docker/oracle/data:/ORCL \
+store/oracle/database-enterprise:12.2.0.1
+```
+
+4.5.1 常用命令
+
+```sql
+-- 登陆
+conn sys/ as sysdba;
+
+-- 修改密码
+alter user sys identified by 123456;
+
+-- 创建一个新的用户授权dba
+--1.用有dba权限的用户登录：sys用户
+--2.创建一个新用户：
+create user c##yiming identified by 123456;
+--3.授予DBA权限： 
+grant connect,resource,dba to c##yiming;
+
+select * from dba_users; 查看数据库里面所有用户，前提是你是有dba权限的帐号，如sys,system
+select * from all_users; 查看你能管理的所有用户！
+select * from user_users; 查看当前用户信息 ！
+```
+
+
+
 # 5、 迁移与备份
 
 ## 5.1 容器保存为镜像
