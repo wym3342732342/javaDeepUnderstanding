@@ -480,7 +480,7 @@ mysql -uroot -p
 
 
 
-**my.cnf配置解决一些时间问题：/etc/mysql/my.cnf**
+**my.cnf配置解决一些时间问题：/etc/mysql/my.cnf**，`需要进入该文件引入的文件配置`
 
 ```mysql
 sql-mode=STRICT_TRANS_TABLES,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION
@@ -600,6 +600,88 @@ select * from dba_users; 查看数据库里面所有用户，前提是你是有d
 select * from all_users; 查看你能管理的所有用户！
 select * from user_users; 查看当前用户信息 ！
 ```
+
+
+
+## 4.6 Elasticsearch部署
+
+创建用户定义的网络（用于连接到连接到同一网络的其他服务（例如，Kibana））：
+
+```dockerfile
+docker network create somenetwork
+```
+
+运行Elasticsearch：【单节点】
+
+```dockerfile
+docker run -d --name elasticsearch --net somenetwork -p 9200:9200 -p 9300:9300 -e "discovery.type=single-node" elasticsearch:6.8.6
+```
+
+
+
+## 4.7 Kibana部署
+
+在给定的示例中，Kibana将连接到用户定义的网络（可用于连接到其他服务（例如Elasticsearch））。如果尚未创建网络，则可以使用以下命令来完成：
+
+```
+$ docker network create somenetwork
+```
+
+*注意：在此示例中，Kibana使用的是默认配置，并希望通过[http：// localhost：9200](http://localhost:9200/)连接到正在运行的Elasticsearch实例。*
+
+运行基巴纳
+
+```
+$ docker run -d --name kibana --net somenetwork -p 5601:5601 kibana:tag
+```
+
+浏览器可通过`http://localhost:5601`或来访问Kibana`http://host-ip:5601`
+
+
+
+## 4.8 rabbitmq部署
+
+(1) 端口说明：
+
+- `15672`： (if management plugin is enabled)
+- `15671` ：management监听端口
+- `5672, 5671`： (AMQP 0-9-1 without and with TLS)
+- `4369`： (epmd) epmd 代表 Erlang 端口映射守护进程
+- `25672`： (Erlang distribution)
+
+(2) 部署命令:
+
+```shell
+docker run -di --name tenRab -p 5671:5671 -p 5672:5672 -p 4369:4369 -p 15671:15671 -p 15672:15672 -p 25672:25672 rabbitmq:management
+```
+
+(3) 配置账号密码的参数【默认`guest`】
+
+```shell
+-e RABBITMQ_DEFAULT_USER=user -e RABBITMQ_DEFAULT_PASS=password
+```
+
+
+
+## 4.9 Gogs部署
+
+1. 下载镜像
+
+```shell
+docker pull gogs/gogs
+```
+
+1. 创建容器
+
+```shell
+docker run -d --name=gogs -p 10022:22 -p 3000:3000 -v /var/gogsdata:/data gogs/gogs
+```
+
+> 进入网页之后即可进行配置。
+>
+> - 数据库：`SQLite3`[推荐]、`Mysql`等数据库
+> - 更改ip地址
+> - 直接注册登录即可使用
 
 
 
@@ -773,9 +855,110 @@ docker push 192.168.3.75:5000/jdk1.8
 
 
 
+# 8、docker network
 
+## 1、connect将容器连接到一个网络
+
+```shell
+docker network connect [OPTIONS] NETWORK CONTAINER
+```
+
+## 2、create创建一个网络
+
+```shell
+docker network create [OPTIONS] NETWORK
+```
+
+## 3、disconnect将容器断开一个网络
+
+```shell
+docker network disconnect [OPTIONS] NETWORK CONTAINER
+```
+
+## 4、inspect显示现有网络的详细信息
+
+```shell
+用法：docker inspect [OPTIONS] NAME|ID [NAME|ID...]
+```
+
+## 5、ls显示网络列表
+
+```shell
+docker network ls
+```
+
+## 6、prune移除所有无用的网络
+
+```shel
+docker network prune
+```
+
+## 7、rm移除指定的网络
+
+```shell
+docker network rm NETWORK [NETWORK...]
+```
+
+
+
+
+
+
+
+# 9、常用的命令
 
 > 补充：
 >
 > 1. 查看docker容器ip地址：`docker inspect 容器ID | grep IPAddress`
 > 2. docker容器重启命令：`docker restart 容器名`
+> 3. 容器主机名：`--hostname [主机名]`
+
+
+
+# 10、开启Remote API远程控制
+
+## 10.1 Dokcer on Mac上开启
+
+### 1、使用socat
+
+**安装socat:**
+
+```shell
+brew install socat
+```
+
+**启动socat：**
+
+```shell
+socat -d TCP-LISTEN:2375,range=127.0.0.1/32,reuseaddr,fork UNIX:/var/run/docker.sock
+```
+
+**开放全部端口：**
+
+```sheel
+socat -d TCP-LISTEN:2375,reuseaddr,fork UNIX:/var/run/docker.sock
+```
+
+**测试：**
+
+```shell
+curl localhost:2375/version
+{"Version":"1.11.2","ApiVersion":"1.23","GitCommit":"56888bf","GoVersion":"go1.5.4",
+"Os":"linux","Arch":"amd64","KernelVersion":"4.4.12-moby",
+"BuildTime":"2016-06-06T23:57:32.306881674+00:00"}
+```
+
+
+
+### 2、使用docker socat
+
+```shell
+docker run -d -v /var/run/docker.sock:/var/run/docker.sock -p 2376:2375 \ bobrik/socat TCP4-LISTEN:2375,fork,reuseaddr UNIX-CONNECT:/var/run/docker.sock
+```
+
+### 3、使用dokcer proxy
+
+```shell
+docker run -p 3375:2375 -v /var/run/docker.sock:/var/run/docker.sock \ -d -e PORT=2375 shipyard/docker-proxy
+```
+
