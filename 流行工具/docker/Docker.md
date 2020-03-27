@@ -478,6 +478,20 @@ docker exec -it testMysql /bin/bash
 mysql -uroot -p
 ```
 
+### 4.1.1 Mysql导入导出
+
+1. 导出全部
+
+```shell
+docker exec tenMysql sh -c 'exec mysqldump --all-databases -uroot -p123456' > /Users/wangyiming/all-databases.sql
+```
+
+2. 导入
+
+```shell
+docker exec -i tenMysql sh -c 'exec mysql -uroot -p123456' < /Users/wangyiming/all-databases.sql
+```
+
 
 
 **my.cnf配置解决一些时间问题：/etc/mysql/my.cnf**，`需要进入该文件引入的文件配置`
