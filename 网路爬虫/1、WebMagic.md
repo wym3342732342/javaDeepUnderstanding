@@ -477,23 +477,29 @@ companion object{
 </dependency>
 
 <dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter</artifactId>
-    <exclusions>
-        <exclusion>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-logging</artifactId>
-        </exclusion>
-        <exclusion>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
-        </exclusion>
-    </exclusions>
+  <groupId>org.springframework.boot</groupId>
+  <artifactId>spring-boot-starter</artifactId>
+  <exclusions>
+    <exclusion>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-classic</artifactId>
+    </exclusion>
+  </exclusions>
+  <!--<exclusions>-->
+  <!--    <exclusion>-->
+  <!--        <groupId>org.springframework.boot</groupId>-->
+  <!--        <artifactId>spring-boot-starter-logging</artifactId>-->
+  <!--    </exclusion>-->
+  <!--    <exclusion>-->
+  <!--        <groupId>org.slf4j</groupId>-->
+  <!--        <artifactId>slf4j-log4j12</artifactId>-->
+  <!--    </exclusion>-->
+  <!--</exclusions>-->
 </dependency>
-<dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-log4j</artifactId>
-</dependency>
+<!--<dependency>-->
+<!--    <groupId>org.springframework.boot</groupId>-->
+<!--    <artifactId>spring-boot-starter-log4j</artifactId>-->
+<!--</dependency>-->
 
 <dependency>
     <groupId>org.springframework.boot</groupId>
@@ -506,9 +512,42 @@ companion object{
 </dependency>
 ```
 
+### 4.2 log4j配置
 
+```properties
+log4j.rootLogger=info,error,CONSOLE,DEBUG
+log4j.appender.CONSOLE=org.apache.log4j.ConsoleAppender
+log4j.appender.CONSOLE.layout=org.apache.log4j.PatternLayout
+log4j.appender.CONSOLE.layout.ConversionPattern=%d{yyyy-MM-dd-HH-mm} [%t] [%c] [%p] - %m%n
 
-### 4.2 SpringBoot启动类
+log4j.logger.info=info
+log4j.appender.info=org.apache.log4j.DailyRollingFileAppender
+log4j.appender.info.layout=org.apache.log4j.PatternLayout
+log4j.appender.info.layout.ConversionPattern=%d{yyyy-MM-dd-HH-mm} [%t] [%c] [%p] - %m%n
+log4j.appender.info.datePattern='.'yyyy-MM-dd
+log4j.appender.info.Threshold = info
+log4j.appender.info.append=true
+#log4j.appender.info.File=d://springboot3/logs/api_services_info.log
+
+log4j.logger.error=error
+log4j.appender.error=org.apache.log4j.DailyRollingFileAppender
+log4j.appender.error.layout=org.apache.log4j.PatternLayout
+log4j.appender.error.layout.ConversionPattern=%d{yyyy-MM-dd-HH-mm} [%t] [%c] [%p] - %m%n
+log4j.appender.error.datePattern='.'yyyy-MM-dd
+log4j.appender.error.Threshold = error
+log4j.appender.error.append=true
+#log4j.appender.error.File=d://springboot3/logs/error/api_services_error.log
+log4j.logger.DEBUG=DEBUG
+log4j.appender.DEBUG=org.apache.log4j.DailyRollingFileAppender
+log4j.appender.DEBUG.layout=org.apache.log4j.PatternLayout
+log4j.appender.DEBUG.layout.ConversionPattern=%d{yyyy-MM-dd-HH-mm} [%t] [%c] [%p] - %m%n
+log4j.appender.DEBUG.datePattern='.'yyyy-MM-dd
+log4j.appender.DEBUG.Threshold = DEBUG
+log4j.appender.DEBUG.append=true
+#log4j.appender.DEBUG.File=d://springboot3/logs/debug/api_services_debug.log
+```
+
+### 4.3 SpringBoot启动类
 
 ```kotlin
 @SpringBootApplication
@@ -530,6 +569,121 @@ class CrawlerApplication {
         fun main(args: Array<String>) {
             runApplication<CrawlerApplication>()
         }
+    }
+}
+```
+
+### 4.4 配置PageProcessor
+
+```kotlin
+//爬取类
+@Component
+class ArticleProcessor : PageProcessor {
+    override fun getSite(): Site {
+        return Site.me()
+                .setRetryTimes(3000)
+                .setSleepTime(100)
+    }
+
+    override fun process(page: Page) {
+        page.addTargetRequests(page.html.links().regex(
+                "https://blog.csdn.net/[a-z 0-9 _]+/article/details/[0-9]{9}"
+        ).all())
+
+        val title = page.html.xpath(
+                """
+                //*[@id="mainBox"]/main/div[1]/div[1]/div[1]/div[1]/h1/text()
+            """.trimIndent()
+        ).get() ?: page.setSkip(true)//跳过
+
+        val content = page.html.xpath(
+                """
+                    //*[@id="content_views"]
+                """.trimIndent()
+        ).get() ?: page.setSkip(true)
+
+        val url = page.url.toString()
+        if (title is String && content is String) {
+            page.putField("title", title)
+            page.putField("content", content)
+            page.putField("url", url)
+        }
+    }
+
+}
+```
+
+### 4.5 配置Pipeline
+
+```kotlin
+//存入数据库
+@Component
+class ArticleDbPipeline:Pipeline {
+    @Autowired
+    private lateinit var articleDao: ArticleDao
+    @Autowired
+    private lateinit var idWorker: IdWorker
+
+    var channelId: String = ""
+
+    override fun process(resultItems: ResultItems, task: Task?) {
+        val title: String = resultItems.get<String>("title")
+        val content: String = resultItems.get<String>("content")
+        val article: Article = Article()
+        article.id = "${idWorker.nextId()}"
+        article.channelid = channelId
+        article.title = title
+        article.content = content
+        articleDao.save(article)
+    }
+}
+```
+
+### 4.6 配置定时任务
+
+```kotlin
+@Component
+class ArticleTask {
+
+    @Autowired
+    private lateinit var articleDbPipeline: ArticleDbPipeline
+    @Autowired
+    private lateinit var redisScheduler: RedisScheduler
+    @Autowired
+    private lateinit var articleProcessor: ArticleProcessor
+
+    /**
+     * 爬取ai数据
+     */
+    @Scheduled(cron = "59 23 23 * * *")//秒，分，时，月，日,星期几
+    fun aiTask() {
+        println("爬取AI文章")
+        val spider = Spider.create(articleProcessor)
+        spider.addUrl("https://blog.csdn.net/nav/ai")
+        articleDbPipeline.channelId = "ai"
+        spider.addPipeline(articleDbPipeline)
+        spider.setScheduler(redisScheduler)
+        spider.start()
+    }
+		//爬取的时间段一定要分开
+    fun dbTask() {
+        println("爬取db文章")
+        val spider = Spider.create(articleProcessor)
+        spider.addUrl("https://blog.csdn.net/nav/db")
+        articleDbPipeline.channelId = "db"
+        spider.addPipeline(articleDbPipeline)
+        spider.setScheduler(redisScheduler)
+        spider.start()
+    }
+
+    fun webTask() {
+        println("爬取web文章")
+        val spider = Spider.create(articleProcessor)
+        spider.addUrl("https://blog.csdn.net/nav/web")
+        articleDbPipeline.channelId = "web"
+        spider.addPipeline(articleDbPipeline)
+        spider.setScheduler(redisScheduler)
+        spider.start()
     }
 }
 ```
