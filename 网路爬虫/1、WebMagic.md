@@ -485,7 +485,7 @@ companion object{
       <artifactId>logback-classic</artifactId>
     </exclusion>
   </exclusions>
-  <!--<exclusions>-->
+  <!--<exclusions>  如果报错logback-classic注释，这段代码取消注释 -->
   <!--    <exclusion>-->
   <!--        <groupId>org.springframework.boot</groupId>-->
   <!--        <artifactId>spring-boot-starter-logging</artifactId>-->
@@ -496,7 +496,7 @@ companion object{
   <!--    </exclusion>-->
   <!--</exclusions>-->
 </dependency>
-<!--<dependency>-->
+<!--<dependency> 此段始终不加 -->
 <!--    <groupId>org.springframework.boot</groupId>-->
 <!--    <artifactId>spring-boot-starter-log4j</artifactId>-->
 <!--</dependency>-->
