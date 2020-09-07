@@ -627,7 +627,7 @@ CollectionOptions.empty().maxDocuments(200).size(100000).capped()
 
 > 此时无限的Http双向请求就做好了。有图所示就像是一条管道源源不绝
 
-
+使用mongo客户端操作：`db.createCollection("cappedtest",{capped:true,size:10,max:2});`
 
 ## 6、小节
 
