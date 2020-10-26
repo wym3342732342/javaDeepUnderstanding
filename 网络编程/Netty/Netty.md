@@ -2066,11 +2066,11 @@ public class DiscardOutboundHandler extends ChannelOutboundHandlerAdapter {
 >
 > &emsp;&emsp;从事件途径`ChannelPipeline`的角度来看，`ChannelPipeline`的头部和尾端取决于该事件是入站的还是出站的。在`Netty`中总是将`ChannelPipeline`的入站口作为头部【左侧】，而出站口作为尾端【右侧】
 >
-> &emsp;&emsp;当完成了通过调用`ChannelPipeline.add*()`方法将入站处理器(`ChannelInboundHandler`)和出站处理器(`ChannelOutboundHandler`)混合添加到`ChannelPipeline`之后，每一个`ChannelHandler`从头部到尾端的顺序位置就是添加时的顺序。**这些处理器从左到右进行编号，第一个入站事件看到de**
+> &emsp;&emsp;当完成了通过调用`ChannelPipeline.add*()`方法将入站处理器(`ChannelInboundHandler`)和出站处理器(`ChannelOutboundHandler`)混合添加到`ChannelPipeline`之后，每一个`ChannelHandler`从头部到尾端的顺序位置就是添加时的顺序。**这些处理器从左到右进行编号，第一个入站事件看到的`ChannelHandler`将是1，而第一个出站事件看到的`ChannelHandler`将是5。**
 
 
 
-
+&emsp;&emsp;`ChannelPipeline`传播事件规则：其会测试`Pipeline`中的**下一个`ChannelHandler`的类型是否和事件的运动方向相匹配。**如果不匹配将会跳过该`ChannelHandler`并前进到下一个，知道找到和该事件所期望的方向相匹配为止。**[部分Handler可能同时实现了出入站的接口]**
 
 
 
