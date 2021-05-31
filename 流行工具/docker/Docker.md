@@ -978,3 +978,44 @@ docker run -d -v /var/run/docker.sock:/var/run/docker.sock -p 2376:2375 \ bobrik
 docker run -p 3375:2375 -v /var/run/docker.sock:/var/run/docker.sock \ -d -e PORT=2375 shipyard/docker-proxy
 ```
 
+
+
+## 10.2 Docker on Linux
+
+```shell
+vi /usr/lib/systemd/system/docker.service
+
+ExecStart=/usr/bin/dockerd -H tcp://0.0.0.0:2375 -H unix://var/run/docker.sock \
+
+systemctl daemon-reload // 1，加载docker守护线程
+systemctl restart docker // 2，重启docker
+```
+
+
+
+# 11、安装docker-compose
+
+## 11.1 Centos安装
+
+```shell
+curl -L "https://github.com/docker/compose/releases/download/1.24.1/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+
+chmod +x /usr/local/bin/docker-compose
+
+ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
+
+docker-compose --version
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
