@@ -648,7 +648,7 @@ public class ConsumerTest {
 
 ## 五、Spring Boot案例
 
-### 5.1 消费者
+### 5.1 生产者
 
 ```java
 @Service
@@ -701,7 +701,7 @@ public class RocketMQProducer{
 }
 ```
 
-### 5.2 生产者
+### 5.2 消费者
 
 ```java
 
@@ -733,8 +733,8 @@ rocketmq:
   producer:
     group: rocketmq_test #自定义的组名称
     send-message-timeout: 3000  #消息发送超时时长
+    
 ## 阿里云平台如下配置
-
 rocketmq:
   name-server: http://xxxxx.mq-internet-access.mq-internet.aliyuncs.com:80  #阿里云rocketmq连接地址
   producer:
