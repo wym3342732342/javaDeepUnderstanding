@@ -458,6 +458,8 @@ docker pull centos/mysql-57-centos7
 docker run -di --name=testMysql -p 33306:3306 -e MYSQL_ROOT_PASSWORD=123456 centos/mysql-57-centos7
 
 docker run -di --name=mysql5.7 -p 3306:3306 -e MYSQL_ROOT_PASSWORD=123456 mysql:5.7
+
+docker run -di --name=mysql8 -p 3306:3306 -e MYSQL_ROOT_PASSWORD=123456 mysql:8.0.27 --lower_case_table_names=1
 ```
 
 `-p`： 代表端口映射，格式为  宿主机映射端口:容器运行端口
@@ -566,6 +568,8 @@ docker run -di --name=myredis -p 6379:6379 redis
 
 ```shell
 docker run -d -it --name myOracle -p 1521:1521 -p 5500:5500 -e DB_SID=orcl store/oracle/database-enterprise:12.2.0.1
+
+docker run -d -it --name myOracle -p 1521:1521 -p 5500:5500 -e DB_SID=orcl store/oracle/database-enterprise:11.2.4.0
 ```
 
 (2) 进入镜像
