@@ -174,6 +174,8 @@
      # The path of cert and key files for nginx
      certificate: /data/cert/harbor.crt # 或者是pem
      private_key: /data/cert/harbor.key # 这块就是私钥就行了
+     certificate: /data/cert/server.pem # 或者是pem
+     private_key: /data/cert/server.key # 这块就是私钥就行了
    
    # Uncomment external_url if you want to enable external proxy
    # And when it enabled the hostname will no longer used

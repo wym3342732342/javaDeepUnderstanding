@@ -1015,11 +1015,9 @@ docker-compose --version
 
 
 
+# 12、认证镜像pusher
 
-
-
-
-
+1. `bitnami`
 
 
 

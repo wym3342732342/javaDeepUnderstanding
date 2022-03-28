@@ -14,9 +14,7 @@ tar xf harbor-offline-installer-v2.2.0.tgz
 mkdir /opt/ssl
 cd /opt/ssl
 openssl genrsa -out tls.key 2048
-openssl req -new -x509 -key tls.key -out tls.cert -days 3650 -subj /CN=*.yb.com
-
-
+openssl req -new -x509 -key tls.key -out tls.cert -days 3650 -subj /CN=*.wz-harbor.com
 ```
 
 
